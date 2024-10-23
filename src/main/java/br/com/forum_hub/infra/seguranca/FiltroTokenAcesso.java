@@ -15,12 +15,20 @@ public class FiltroTokenAcesso extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         //recuperar o token da requisição
-        String token;
+        String token = recuperarTokenRequisicao(request);
 
         if(token != null){
             //validacao do token
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String recuperarTokenRequisicao(HttpServletRequest request) {
+        var authorizationHeader = request.getHeader("Authorization");
+        if(authorizationHeader != null){
+            return authorizationHeader.replace("Bearer ", "");
+        }
+        return null;
     }
 }
