@@ -2,6 +2,7 @@ package br.com.forum_hub.domain.topico;
 
 import br.com.forum_hub.domain.curso.Categoria;
 import br.com.forum_hub.domain.curso.Curso;
+import br.com.forum_hub.domain.usuario.Usuario;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -22,7 +23,9 @@ public class Topico {
     private Long id;
     private String titulo;
     private String mensagem;
-    private String autor;
+    @ManyToOne
+    @JoinColumn(name="autor_id")
+    private Usuario autor;
     private LocalDateTime dataCriacao;
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -38,10 +41,10 @@ public class Topico {
     @Deprecated
     public Topico(){}
 
-    public Topico(DadosCadastroTopico dados, Curso curso) {
+    public Topico(DadosCadastroTopico dados, Curso curso, Usuario autor) {
         this.titulo = dados.titulo();
         this.mensagem = dados.mensagem();
-        this.autor = dados.autor();
+        this.autor = autor;
         this.dataCriacao = LocalDateTime.now();
         this.status = Status.NAO_RESPONDIDO;
         this.aberto = true;
@@ -62,7 +65,7 @@ public class Topico {
         return mensagem;
     }
 
-    public String getAutor() {
+    public Usuario getAutor() {
         return autor;
     }
 
