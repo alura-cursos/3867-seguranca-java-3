@@ -5,13 +5,19 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.springframework.security.core.GrantedAuthority;
 
 @Entity
 @Table(name = "perfis")
-public class Perfil {
+public class Perfil implements GrantedAuthority {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private PerfilNome nome;
+
+    @Override
+    public String getAuthority() {
+        return "ROLE_" + nome;
+    }
 }
