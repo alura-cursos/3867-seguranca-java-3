@@ -1,6 +1,7 @@
 package br.com.forum_hub.domain.usuario;
 
 import br.com.forum_hub.infra.email.EmailService;
+import br.com.forum_hub.infra.exception.RegraDeNegocioException;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -40,5 +41,34 @@ public class UsuarioService implements UserDetailsService {
     public void verificarEmail(String codigo) {
         var usuario = usuarioRepository.findByToken(codigo).orElseThrow();
         usuario.verificar();
+    }
+
+    public Usuario buscarPeloNomeUsuario(String nomeUsuario) {
+        return usuarioRepository.findByNomeUsuarioIgnoreCaseAndVerificadoTrueAndAtivoTrue(nomeUsuario).orElseThrow(
+                () -> new RegraDeNegocioException("Usuário não encontrado!"));
+    }
+
+    @Transactional
+    public Usuario editarPerfil(Usuario usuario, DadosEdicaoUsuario dados) {
+        return usuario.alterarDados(dados);
+    }
+
+    @Transactional
+    public void alterarSenha(DadosAlteracaoSenha dados, Usuario logado) {
+        if(!passwordEncoder.matches(dados.senhaAtual(), logado.getPassword())){
+            throw new RegraDeNegocioException("Senha digitada não confere com senha atual!");
+        }
+
+        if(!dados.novaSenha().equals(dados.novaSenhaConfirmacao())){
+            throw new RegraDeNegocioException("Senha e confirmação não conferem!");
+        }
+
+        String senhaCriptografada = passwordEncoder.encode(dados.novaSenha());
+        logado.alterarSenha(senhaCriptografada);
+    }
+
+    @Transactional
+    public void desativarUsuario(Usuario usuario) {
+        usuario.desativar();
     }
 }
