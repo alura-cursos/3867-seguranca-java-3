@@ -2,6 +2,7 @@ package br.com.forum_hub.infra.seguranca;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,6 +31,18 @@ public class ConfiguracoesSeguranca {
                 .authorizeHttpRequests(
                         req -> {
                             req.requestMatchers("/login", "/atualizar-token", "/registrar", "verificar-conta").permitAll();
+
+                            req.requestMatchers(HttpMethod.GET, "/cursos").permitAll();
+                            req.requestMatchers(HttpMethod.GET, "/topicos/**").permitAll();
+
+                            req.requestMatchers(HttpMethod.POST, "/topicos").hasRole("ESTUDANTE");
+                            req.requestMatchers(HttpMethod.PUT, "/topicos").hasRole("ESTUDANTE");
+                            req.requestMatchers(HttpMethod.DELETE, "/topicos/**").hasRole("ESTUDANTE");
+
+                            req.requestMatchers(HttpMethod.PATCH, "/topicos/**").hasRole("MODERADOR");
+
+                            req.requestMatchers(HttpMethod.PATCH, "/adicionar-perfil/**").hasRole("ADMIN");
+
                             req.anyRequest().authenticated();
                         }
                 )
