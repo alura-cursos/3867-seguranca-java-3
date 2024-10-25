@@ -3,9 +3,13 @@ import br.com.forum_hub.domain.perfil.Perfil;
 import br.com.forum_hub.domain.perfil.PerfilNome;
 import br.com.forum_hub.infra.exception.RegraDeNegocioException;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,12 +36,16 @@ public class Usuario implements UserDetails {
     private String token;
     private LocalDateTime expiracaoToken;
     private Boolean ativo;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "usuarios_perfis",
+    joinColumns = @JoinColumn(name = "usuario_id"),
+    inverseJoinColumns = @JoinColumn(name = "perfil_id"))
     private List<Perfil> perfis;
 
     @Deprecated
     public Usuario(){}
 
-    public Usuario(DadosCadastroUsuario dados, String senhaCriptografada) {
+    public Usuario(DadosCadastroUsuario dados, String senhaCriptografada, Perfil perfil) {
         this.nomeCompleto = dados.nomeCompleto();
         this.email = dados.email();
         this.senha = senhaCriptografada;
@@ -48,6 +56,7 @@ public class Usuario implements UserDetails {
         this.token = UUID.randomUUID().toString();
         this.expiracaoToken = LocalDateTime.now().plusMinutes(30);
         this.ativo = false;
+        this.perfis.add(perfil);
     }
 
     @Override
