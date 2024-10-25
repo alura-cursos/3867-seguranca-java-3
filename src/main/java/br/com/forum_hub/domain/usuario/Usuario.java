@@ -28,7 +28,9 @@ public class Usuario implements UserDetails {
     private Boolean verificado;
     private String token;
     private LocalDateTime expiracaoToken;
+    private Boolean ativo;
 
+    @Deprecated
     public Usuario(){}
 
     public Usuario(DadosCadastroUsuario dados, String senhaCriptografada) {
@@ -41,6 +43,7 @@ public class Usuario implements UserDetails {
         this.verificado = false;
         this.token = UUID.randomUUID().toString();
         this.expiracaoToken = LocalDateTime.now().plusMinutes(30);
+        this.ativo = false;
     }
 
     @Override
@@ -87,7 +90,29 @@ public class Usuario implements UserDetails {
             throw new RegraDeNegocioException("Link de verificação expirou!");
         }
         this.verificado = true;
+        this.ativo = true;
         this.token = null;
         this.expiracaoToken = null;
+    }
+
+    public void desativar() {
+        this.ativo = false;
+    }
+
+    public Usuario alterarDados(DadosEdicaoUsuario dados) {
+        if(dados.nomeUsuario() != null){
+            this.nomeUsuario = dados.nomeUsuario();
+        }
+        if(dados.miniBiografia() != null){
+            this.miniBiografia = dados.miniBiografia();
+        }
+        if(dados.biografia() != null){
+            this.biografia = dados.biografia();
+        }
+        return this;
+    }
+
+    public void alterarSenha(String senhaCriptografada) {
+        this.senha = senhaCriptografada;
     }
 }
