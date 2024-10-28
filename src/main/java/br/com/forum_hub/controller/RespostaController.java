@@ -4,8 +4,10 @@ import br.com.forum_hub.domain.resposta.DadosListagemResposta;
 import br.com.forum_hub.domain.resposta.DadosCadastroResposta;
 import br.com.forum_hub.domain.resposta.DadosAtualizacaoResposta;
 import br.com.forum_hub.domain.resposta.RespostaService;
+import br.com.forum_hub.domain.usuario.Usuario;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -41,8 +43,8 @@ public class RespostaController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<DadosListagemResposta> marcarComoSolucao(@PathVariable Long id){
-        var resposta = service.marcarComoSolucao(id);
+    public ResponseEntity<DadosListagemResposta> marcarComoSolucao(@PathVariable Long id, @AuthenticationPrincipal Usuario logado){
+        var resposta = service.marcarComoSolucao(id, logado);
         return ResponseEntity.ok(new DadosListagemResposta(resposta));
     }
 
