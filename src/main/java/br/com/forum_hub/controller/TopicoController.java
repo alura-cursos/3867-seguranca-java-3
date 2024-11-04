@@ -64,8 +64,8 @@ public class TopicoController {
     }
 
     @PutMapping
-    public ResponseEntity<DadosListagemTopico> atualizar(@RequestBody @Valid DadosAtualizacaoTopico dados){
-        var topico = service.atualizar(dados);
+    public ResponseEntity<DadosListagemTopico> atualizar(@RequestBody @Valid DadosAtualizacaoTopico dados, @AuthenticationPrincipal Usuario logado){
+        var topico = service.atualizar(dados, logado);
         return ResponseEntity.ok(new DadosListagemTopico(topico));
     }
 
@@ -76,8 +76,8 @@ public class TopicoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id){
-        service.excluir(id);
+    public ResponseEntity<Void> excluir(@PathVariable Long id, @AuthenticationPrincipal Usuario logado){
+        service.excluir(id, logado);
         return ResponseEntity.noContent().build();
     }
 

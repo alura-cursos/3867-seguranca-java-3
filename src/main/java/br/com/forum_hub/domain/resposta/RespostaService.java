@@ -4,10 +4,9 @@ import br.com.forum_hub.domain.topico.Status;
 import br.com.forum_hub.domain.topico.TopicoService;
 import br.com.forum_hub.domain.usuario.Usuario;
 import br.com.forum_hub.infra.exception.RegraDeNegocioException;
+import br.com.forum_hub.infra.seguranca.HierarquiaService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,12 +15,12 @@ import java.util.List;
 public class RespostaService {
     private final RespostaRepository repository;
     private final TopicoService topicoService;
-    private final RoleHierarchy roleHierarchy;
+    private final HierarquiaService hierarquiaService;
 
-    public RespostaService(RespostaRepository repository, TopicoService topicoService, RoleHierarchy roleHierarchy) {
+    public RespostaService(RespostaRepository repository, TopicoService topicoService, HierarquiaService hierarquiaService) {
         this.repository = repository;
         this.topicoService = topicoService;
-        this.roleHierarchy = roleHierarchy;
+        this.hierarquiaService = hierarquiaService;
     }
 
     @Transactional
@@ -43,8 +42,12 @@ public class RespostaService {
     }
 
     @Transactional
-    public Resposta atualizar(DadosAtualizacaoResposta dados) {
+    public Resposta atualizar(DadosAtualizacaoResposta dados, Usuario logado) {
         var resposta = buscarPeloId(dados.id());
+
+        if(hierarquiaService.usuarioNaoTemPermissoes(logado, resposta.getTopico().getAutor(), "ROLE_MODERADOR"))
+            throw new AccessDeniedException("Você não pode editar essa resposta!");
+
         return resposta.atualizarInformacoes(dados);
     }
 
@@ -58,7 +61,7 @@ public class RespostaService {
 
         var topico = resposta.getTopico();
 
-        if(!usuarioTemPermissoes(logado, topico.getAutor()))
+        if(hierarquiaService.usuarioNaoTemPermissoes(logado, topico.getAutor(), "ROLE_INSTRUTOR"))
             throw new AccessDeniedException("Você não pode marcar essa resposta como solução!");
 
         if(topico.getStatus() == Status.RESOLVIDO)
@@ -68,22 +71,13 @@ public class RespostaService {
         return resposta.marcarComoSolucao();
     }
 
-    private boolean usuarioTemPermissoes(Usuario logado, Usuario autor) {
-        for(GrantedAuthority autoridade: logado.getAuthorities()){
-            var autoridadesAlcancaveis =  roleHierarchy.getReachableGrantedAuthorities(List.of(autoridade));
-
-            for(GrantedAuthority perfil: autoridadesAlcancaveis){
-                if(perfil.getAuthority().equals("ROLE_INSTRUTOR") || logado.getId().equals(autor.getId()))
-                    return true;
-            }
-        }
-        return false;
-    }
-
     @Transactional
-    public void excluir(Long id) {
+    public void excluir(Long id, Usuario logado) {
         var resposta = buscarPeloId(id);
         var topico = resposta.getTopico();
+
+        if(hierarquiaService.usuarioNaoTemPermissoes(logado, topico.getAutor(), "ROLE_MODERADOR"))
+            throw new AccessDeniedException("Você não pode apagar essa resposta!");
 
         repository.deleteById(id);
 

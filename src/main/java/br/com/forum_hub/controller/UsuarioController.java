@@ -62,8 +62,14 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/desativar")
-    public ResponseEntity<Void> desativarUsuario(@AuthenticationPrincipal Usuario logado){
-        usuarioService.desativarUsuario(logado);
+    public ResponseEntity<Void> desativarUsuario(@PathVariable Long id, @AuthenticationPrincipal Usuario logado){
+        usuarioService.desativarUsuario(id, logado);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/reativar-conta/{id}")
+    public ResponseEntity<Void> reativarUsuario(@PathVariable Long id){
+        usuarioService.reativarUsuario(id);
         return ResponseEntity.noContent().build();
     }
 

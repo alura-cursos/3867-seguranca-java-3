@@ -3,10 +3,12 @@ package br.com.forum_hub.domain.topico;
 import br.com.forum_hub.domain.curso.CursoService;
 import br.com.forum_hub.domain.usuario.Usuario;
 import br.com.forum_hub.infra.exception.RegraDeNegocioException;
+import br.com.forum_hub.infra.seguranca.HierarquiaService;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,10 +16,12 @@ public class TopicoService {
 
     private final TopicoRepository repository;
     private final CursoService cursoService;
+    private final HierarquiaService hierarquiaService;
 
-    public TopicoService(TopicoRepository repository, CursoService cursoService) {
+    public TopicoService(TopicoRepository repository, CursoService cursoService, HierarquiaService hierarquiaService) {
         this.repository = repository;
         this.cursoService = cursoService;
+        this.hierarquiaService = hierarquiaService;
     }
 
     @Transactional
@@ -38,15 +42,23 @@ public class TopicoService {
     }
 
     @Transactional
-    public Topico atualizar(DadosAtualizacaoTopico dados) {
+    public Topico atualizar(DadosAtualizacaoTopico dados, Usuario logado) {
         var topico = buscarPeloId(dados.id());
+
+        if(hierarquiaService.usuarioNaoTemPermissoes(logado, topico.getAutor(), "ROLE_MODERADOR"))
+            throw new AccessDeniedException("Você não pode editar esse tópico!");
+
         var curso = cursoService.buscarPeloId(dados.cursoId());
         return topico.atualizarInformacoes(dados, curso);
     }
 
     @Transactional
-    public void excluir(Long id) {
+    public void excluir(Long id, Usuario logado) {
         var topico = buscarPeloId(id);
+
+        if(hierarquiaService.usuarioNaoTemPermissoes(logado, topico.getAutor(), "ROLE_MODERADOR"))
+            throw new AccessDeniedException("Você não pode apagar esse tópico!");
+
         if (topico.getStatus() == Status.NAO_RESPONDIDO)
             repository.deleteById(id);
         else
